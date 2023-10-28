@@ -98,6 +98,9 @@ proc processImage(fromData: string, maskImage: Image,
             sourceImage.width == 720 and sourceImage.height == 270):
         sourceImage = sourceImage.resize(sourceImage.width,
                 sourceImage.height*2)
+    # Turns out, vertically doubling modes also exist.
+    if (sourceImage.width == 256 and sourceImage.height == 448):
+        sourceImage = sourceImage.resize(sourceImage.width*2, sourceImage.height)
 
     let
         # We explicilty fit into something four times as wide as the screen,
