@@ -1,0 +1,13 @@
+
+coverage/
+nimbledeps/*
+toolchain/*
+build/*
+
+nimshot
+nimshot.cfg
+packaging/APPS/nimshot/nimshot
+packaging/APPS/nimshot/README.md
+packaging/APPS/nimshot/LICENSE
+!packaging/APPS/nimshot
+!packaging/APPS/nimshot/nimshot.cfg
