@@ -92,15 +92,19 @@ proc processImage(fromData: string, maskImage: Image,
     except PixieError:
         return ""
 
-    # Dirty hack: Try to save distorted SNES and Amiga screenshots by doubling lines.
+    # Dirty hack: Try to save distorted SNES, Amiga and PSX screenshots by doubling lines,
+    # through remembering specific sizes of screenshots where pixels are not square.
     if (sourceImage.width == 512 and sourceImage.height == 224) or (
             sourceImage.width == 512 and sourceImage.height == 239) or (
-            sourceImage.width == 720 and sourceImage.height == 270):
+            sourceImage.width == 720 and sourceImage.height == 270) or (
+                    sourceImage.width == 640 and sourceImage.height == 240):
         sourceImage = sourceImage.resize(sourceImage.width,
                 sourceImage.height*2)
     # Turns out, vertically doubling modes also exist.
+    # I sure hope there isn't an arcade game with this exact resolution.
     if (sourceImage.width == 256 and sourceImage.height == 448):
-        sourceImage = sourceImage.resize(sourceImage.width*2, sourceImage.height)
+        sourceImage = sourceImage.resize(sourceImage.width*2,
+                sourceImage.height)
 
     let
         # We explicilty fit into something four times as wide as the screen,
