@@ -102,9 +102,14 @@ proc processImage(fromData: string, maskImage: Image,
                 sourceImage.height*2)
     # Turns out, vertically doubling modes also exist.
     # I sure hope there isn't an arcade game with this exact resolution.
-    if (sourceImage.width == 256 and sourceImage.height == 448):
+    elif (sourceImage.width == 256 and sourceImage.height == 448):
         sourceImage = sourceImage.resize(sourceImage.width*2,
                 sourceImage.height)
+    # And this one is from PSX and is especially exotic, because it implies 
+    # a screen that is actually 738x480.
+    elif (sourceImage.width == 368 and sourceImage.height == 480):
+        sourceImage = sourceImage.resize(640, 480)
+
 
     let
         # We explicilty fit into something four times as wide as the screen,
