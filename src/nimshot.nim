@@ -99,19 +99,14 @@ proc processImage(fromData: string, maskImage: Image,
     # console resolutions.
     let r = (w: sourceImage.width, h: sourceImage.height)
     if r in [
-        (w: 512, h: 224), (w: 512, h: 239), # SNES
+        (w: 512, h: 224), (w: 512, h: 239), (w: 256, h: 448), # SNES
+        ]:
+        sourceImage = sourceImage.resize(toInt((r.h/7)*8), r.h) # 8:7
+    elif r in [
         (w: 720, h: 270), # Amiga
+        (w: 368, h: 480), (w: 640, h: 240), (w: 512, h: 240), # PSX
         ]:
-        sourceImage = sourceImage.resize(r.w, r.h*2)
-    elif r in [
-        (w: 256, h: 448), # SNES
-        ]:
-        sourceImage = sourceImage.resize(r.w*2, r.h)
-    elif r in [
-        (w: 368, h: 480), # Exotic PSX modes which can't be saved by simply doubling lines.
-        (w: 640, h: 240), (w: 512, h: 240), # PSX
-        ]:
-        sourceImage = sourceImage.resize(640, 480)
+        sourceImage = sourceImage.resize(toInt((r.h/3)*4), r.h) # 4:3
 
     let
         # We explicilty fit into something four times as wide as the screen,
