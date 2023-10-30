@@ -95,23 +95,23 @@ proc processImage(fromData: string, maskImage: Image,
 
     # Dirty hack: Try to save distorted SNES, Amiga and PSX screenshots by doubling lines,
     # through remembering specific sizes of screenshots where pixels are not square.
-    if (sourceImage.width == 512 and sourceImage.height == 224) or (
-            sourceImage.width == 512 and sourceImage.height == 239) or (
-            sourceImage.width == 720 and sourceImage.height == 270) or (
-                    sourceImage.width == 640 and sourceImage.height == 240) or (
-            sourceImage.width == 512 and sourceImage.height == 240):
-        sourceImage = sourceImage.resize(sourceImage.width,
-                sourceImage.height*2)
-    # Turns out, vertically doubling modes also exist.
-    # I sure hope there isn't an arcade game with this exact resolution.
-    elif (sourceImage.width == 256 and sourceImage.height == 448):
-        sourceImage = sourceImage.resize(sourceImage.width*2,
-                sourceImage.height)
-    # And this one is from PSX and is especially exotic, because it implies
-    # a screen that is actually 738x480.
-    elif (sourceImage.width == 368 and sourceImage.height == 480):
+    # Notice that these are sizes RetroArch saves screenshots at, not necessarily actual
+    # console resolutions.
+    let r = (w: sourceImage.width, h: sourceImage.height)
+    if r in [
+        (w: 512, h: 224), (w: 512, h: 239), # SNES
+        (w: 720, h: 270), # Amiga
+        (w: 640, h: 240), (w: 512, h: 240), # PSX
+        ]:
+        sourceImage = sourceImage.resize(r.w, r.h*2)
+    elif r in [
+        (w: 256, h: 448), # SNES
+        ]:
+        sourceImage = sourceImage.resize(r.w*2, r.h)
+    elif r in [
+        (w: 368, h: 480), # Exotic PSX which can't be saved by simply doubling lines.
+        ]:
         sourceImage = sourceImage.resize(640, 480)
-
 
     let
         # We explicilty fit into something four times as wide as the screen,

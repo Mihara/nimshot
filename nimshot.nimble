@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.3"
+version       = "0.1.4"
 author        = "Eugene Medvedev"
 description   = "A very specialized tool for RG35XX"
 license       = "MIT"
