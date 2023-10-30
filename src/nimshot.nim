@@ -80,6 +80,14 @@ proc showConsole(pause: bool = true, clear: bool = false,
             screenBuffer = @[]
     discard
 
+proc matchAspect(img: Image, x: int, y: int): Image =
+    # We're not handling the case of a vertically oriented screen properly,
+    # and probably shouldn't.
+    if img.width > img.height:
+        result = img.resize(img.width, toInt((img.width/x)*y.float))
+    else:
+        result = img.resize(toInt((img.height/y)*x.float), img.height)
+
 proc processImage(fromData: string, maskImage: Image,
     position: Location, romName: string): string =
     # Logic is like so:
@@ -99,26 +107,25 @@ proc processImage(fromData: string, maskImage: Image,
     except PixieError:
         return ""
 
-    # Dirty hack: Try to save distorted SNES, Amiga and PSX screenshots by doubling lines,
-    # through remembering specific sizes of screenshots where pixels are not square.
+    # Dirty hack: Try to save distorted SNES, Amiga and PSX screenshots by forcing them,
+    # into a specific aspect ratio, through remembering specific sizes of screenshots
+    # where pixels are not square.
     # Notice that these are sizes RetroArch saves screenshots at, not necessarily actual
     # console resolutions.
     let r = (w: sourceImage.width, h: sourceImage.height)
     if r in [
-        (w: 512, h: 224), (w: 512, h: 239), (w: 256, h: 448), # SNES
+        # SNES has an unusual aspect ratio (8:7) but few resolutions where pixels are not square.
+        (w: 512, h: 224), (w: 512, h: 239), (w: 256, h: 448),
         ]:
-        if r.w > r.h: # Actual aspect should be 8:7
-            sourceImage = sourceImage.resize(r.w, toInt((r.w/8)*7))
-        else:
-            sourceImage = sourceImage.resize(toInt((r.h/7)*8), r.h) # 8:7
+        sourceImage = sourceImage.matchAspect(8, 7)
     elif r in [
         (w: 720, h: 270), # Amiga
-        (w: 368, h: 480), (w: 368, h: 240), (w: 640, h: 240), (w: 512, h: 240), # PSX
+        # PSX is rapidly emerging as the craziest platform, which will eventually
+        # result in a false positive somewhere.
+        (w: 368, h: 480), (w: 368, h: 240), (w: 640, h: 240), (w: 512, h: 240),
+        (w: 512, h: 480), (w: 512, h: 208), (w: 512, h: 256)
         ]:
-        if r.w > r.h: # Actual aspect should be 4:3.
-            sourceImage = sourceImage.resize(r.w, toInt((r.w/4)*3)) # 4:3
-        else:
-            sourceImage = sourceImage.resize(toInt((r.h/3)*4), r.h) # 4:3
+        sourceImage = sourceImage.matchAspect(4, 3)
 
     let
         # We explicilty fit into something four times as wide as the screen,
