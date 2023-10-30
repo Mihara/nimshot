@@ -9,6 +9,8 @@ import linuxfb
 const targetWidth* = 640
 const targetHeight* = 480
 
+const black* = "#000000"
+
 var fd: cint
 var mapPtr: pointer = nil
 var fix_info: fb_fix_screeninfo
@@ -16,7 +18,7 @@ var var_info: fb_var_screeninfo
 var backup_var_info: fb_var_screeninfo
 
 let blankImage* = newImage(targetHeight, targetWidth)
-blankImage.fill("#000000")
+blankImage.fill(black)
 
 # Needs a forward declaration.
 proc blitImage*(img: Image)

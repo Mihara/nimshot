@@ -14,13 +14,14 @@ when useFB:
 
     const fontSize = 22
     const fontColor = "#fc8c14"
-    const fontOutline = "#000000"
+    const fontOutline = black
+    const textBg = black
     const outlineSize = 1.0
 
     const txtMarginX = 16
     const txtMarginY = 16
 
-    const maxLines = toInt((targetHeight - txtMarginY*2) / fontSize) - 1
+    const maxLines = toInt(trunc((targetHeight - txtMarginY*2) / fontSize) - 1)
 
     var screenBuffer: seq[string]
 
@@ -62,7 +63,7 @@ proc drawText(img: Image, s: string) =
 proc showConsole(pause: bool = true, clear: bool = false) =
     when useFB:
         let textBuffer = newImage(targetWidth, targetHeight)
-        textBuffer.fill("#000000")
+        textBuffer.fill(textBg)
         let start = max(0, screenBuffer.len - maxLines)
         textBuffer.drawText(join(screenBuffer[start .. min(screenBuffer.len-1,
                 start+maxLines-1)], "\n"))
@@ -105,7 +106,7 @@ proc processImage(fromData: string, maskImage: Image,
     elif (sourceImage.width == 256 and sourceImage.height == 448):
         sourceImage = sourceImage.resize(sourceImage.width*2,
                 sourceImage.height)
-    # And this one is from PSX and is especially exotic, because it implies 
+    # And this one is from PSX and is especially exotic, because it implies
     # a screen that is actually 738x480.
     elif (sourceImage.width == 368 and sourceImage.height == 480):
         sourceImage = sourceImage.resize(640, 480)
@@ -122,7 +123,7 @@ proc processImage(fromData: string, maskImage: Image,
         canvas = newImage(targetWidth, targetHeight)
 
     # Fill canvas with black.
-    canvas.fill(rgba(0, 0, 0, 255))
+    canvas.fill(black)
 
     # Paste the resized screenshot at the edge desired.
     # In theory it should be possible to scale and translate in one operation.
@@ -263,7 +264,7 @@ when isMainModule:
 
                     if romNames.hasKey(romName):
 
-                        print "* " & filename & ext
+                        print "+ " & filename & ext
 
                         if dryRun:
                             continue
