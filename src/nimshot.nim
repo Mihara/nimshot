@@ -101,7 +101,6 @@ proc processImage(fromData: string, maskImage: Image,
     if r in [
         (w: 512, h: 224), (w: 512, h: 239), # SNES
         (w: 720, h: 270), # Amiga
-        (w: 640, h: 240), (w: 512, h: 240), # PSX
         ]:
         sourceImage = sourceImage.resize(r.w, r.h*2)
     elif r in [
@@ -109,7 +108,8 @@ proc processImage(fromData: string, maskImage: Image,
         ]:
         sourceImage = sourceImage.resize(r.w*2, r.h)
     elif r in [
-        (w: 368, h: 480), # Exotic PSX which can't be saved by simply doubling lines.
+        (w: 368, h: 480), # Exotic PSX modes which can't be saved by simply doubling lines.
+        (w: 640, h: 240), (w: 512, h: 240), # PSX
         ]:
         sourceImage = sourceImage.resize(640, 480)
 
