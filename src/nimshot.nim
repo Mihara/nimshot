@@ -98,7 +98,8 @@ proc processImage(fromData: string, maskImage: Image,
     if (sourceImage.width == 512 and sourceImage.height == 224) or (
             sourceImage.width == 512 and sourceImage.height == 239) or (
             sourceImage.width == 720 and sourceImage.height == 270) or (
-                    sourceImage.width == 640 and sourceImage.height == 240):
+                    sourceImage.width == 640 and sourceImage.height == 240) or (
+            sourceImage.width == 512 and sourceImage.height == 240):
         sourceImage = sourceImage.resize(sourceImage.width,
                 sourceImage.height*2)
     # Turns out, vertically doubling modes also exist.
