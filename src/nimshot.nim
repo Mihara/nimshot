@@ -80,13 +80,8 @@ proc showConsole(pause: bool = true, clear: bool = false,
             screenBuffer = @[]
     discard
 
-proc matchAspect(img: Image, x: int, y: int): Image =
-    # We're not handling the case of a vertically oriented screen properly,
-    # and probably shouldn't.
-    if img.width > img.height:
-        result = img.resize(img.width, toInt((img.width/x)*y.float))
-    else:
-        result = img.resize(toInt((img.height/y)*x.float), img.height)
+proc forceAspect(img: Image, x: int, y: int): Image =
+    result = img.resize(toInt((targetHeight/y)*x.float), targetHeight)
 
 proc processImage(fromData: string, maskImage: Image,
     position: Location, romName: string): string =
@@ -107,9 +102,9 @@ proc processImage(fromData: string, maskImage: Image,
     except PixieError:
         return ""
 
-    # Dirty hack: Try to save distorted SNES, Amiga and PSX screenshots by forcing them,
-    # into a specific aspect ratio, through remembering specific sizes of screenshots
-    # where pixels are not square.
+    # Dirty hack: Try to save distorted SNES, Amiga, Atari 2600 and PSX screenshots 
+    # by forcing them into a specific aspect ratio, through remembering specific
+    # sizes of screenshots where pixels are not square.
     # Notice that these are sizes RetroArch saves screenshots at, not necessarily actual
     # console resolutions.
     let r = (w: sourceImage.width, h: sourceImage.height)
@@ -117,7 +112,7 @@ proc processImage(fromData: string, maskImage: Image,
         # SNES has an unusual aspect ratio (8:7) but few resolutions where pixels are not square.
         (w: 512, h: 224), (w: 512, h: 239), (w: 256, h: 448),
         ]:
-        sourceImage = sourceImage.matchAspect(8, 7)
+        sourceImage = sourceImage.forceAspect(8, 7)
     elif r in [
         (w: 720, h: 270), # Amiga
         (w: 160, h: 210), # Atari 2600
@@ -126,14 +121,19 @@ proc processImage(fromData: string, maskImage: Image,
         (w: 368, h: 480), (w: 368, h: 240), (w: 640, h: 240), (w: 512, h: 240),
         (w: 512, h: 480), (w: 512, h: 208), (w: 512, h: 256)
         ]:
-        sourceImage = sourceImage.matchAspect(4, 3)
-
-    let
+        sourceImage = sourceImage.forceAspect(4, 3)
+    else:
+        # Otherwise it's a normal resize that assumes square pixels.
         # We explicilty fit into something four times as wide as the screen,
         # so as to only fit on vertical.
-        (newWidth, newHeight) = fitInto(sourceImage.width.float,
-            sourceImage.height.float, targetWidth.float * 4, targetHeight.float)
-        screenshot = sourceImage.resize(toInt(newWidth), toInt(newHeight))
+        let
+            (newWidth, newHeight) = fitInto(
+                sourceImage.width.float,
+                sourceImage.height.float,
+                targetWidth.float * 4,
+                targetHeight.float
+            )
+        sourceImage = sourceImage.resize(toInt(newWidth), toInt(newHeight))
 
     var
         canvas = newImage(targetWidth, targetHeight)
@@ -145,11 +145,11 @@ proc processImage(fromData: string, maskImage: Image,
     # In theory it should be possible to scale and translate in one operation.
     # In practice I can't be bothered enough to figure that out.
     let position = case position
-        of Right: translate(vec2((targetWidth-screenshot.width).float32, 0.0))
+        of Right: translate(vec2((targetWidth-sourceImage.width).float32, 0.0))
         of Left: translate(vec2(0.0, 0.0))
-        of Center: translate(vec2(((targetWidth-screenshot.width) / 2).float32, 0.0))
+        of Center: translate(vec2(((targetWidth-sourceImage.width) / 2).float32, 0.0))
 
-    canvas.draw(screenshot, position)
+    canvas.draw(sourceImage, position)
 
     # Paste the mask over that.
     if maskImage != nil:
