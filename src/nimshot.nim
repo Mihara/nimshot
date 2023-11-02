@@ -13,6 +13,9 @@ when useFB:
     var fontStroke: Font
 
     const fontSize = 22
+    # This was arrived at experimentally, and pixie is making it difficult 
+    # to calculate the actual line height in advance.
+    const fontLineHeight = fontSize + 10
     const fontColor = "#fc8c14"
     const fontOutline = black
     const textBg = black
@@ -21,8 +24,7 @@ when useFB:
     const txtMarginX = 16
     const txtMarginY = 16
 
-    const maxLines = toInt(trunc((targetHeight - txtMarginY*2) / fontSize) - 1)
-
+    const maxLines = toInt(trunc((targetHeight - txtMarginY*2) / fontLineHeight))
     var screenBuffer: seq[string]
 
 type
@@ -102,7 +104,7 @@ proc processImage(fromData: string, maskImage: Image,
     except PixieError:
         return ""
 
-    # Dirty hack: Try to save distorted SNES, Amiga, Atari 2600 and PSX screenshots 
+    # Dirty hack: Try to save distorted SNES, Amiga, Atari 2600 and PSX screenshots
     # by forcing them into a specific aspect ratio, through remembering specific
     # sizes of screenshots where pixels are not square.
     # Notice that these are sizes RetroArch saves screenshots at, not necessarily actual
@@ -110,7 +112,8 @@ proc processImage(fromData: string, maskImage: Image,
     let r = (w: sourceImage.width, h: sourceImage.height)
     if r in [
         # SNES has an unusual aspect ratio (8:7) but few resolutions where pixels are not square.
-        (w: 512, h: 224), (w: 512, h: 239), (w: 256, h: 448),
+        (w: 512, h: 224), (w: 256, h: 224), (w: 512, h: 239), (w: 256, h: 239),
+                (w: 256, h: 448),
         ]:
         sourceImage = sourceImage.forceAspect(8, 7)
     elif r in [
