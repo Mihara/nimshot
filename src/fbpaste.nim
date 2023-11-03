@@ -31,7 +31,12 @@ proc cleanupFb() =
     discard fd.close()
 
 proc initFb() =
-    fd = open("/dev/fb0", O_RDWR)
+
+    try:
+        fd = open("/dev/fb0", O_RDWR)
+    except IOError:
+        # If we couldn't open the framebuffer, just silently fail.
+        return
 
     discard ioctl(fd, FBIOGET_FSCREENINFO, addr fix_info)
     discard ioctl(fd, FBIOGET_VSCREENINFO, addr var_info)
@@ -75,7 +80,7 @@ func colorTo32bit(c: ColorRGBX): uint32 {.inline.} =
             color.r.uint32)) and 0x00ffffff.uint32
 
 # This is abstracted away so that I don't have to repeat it myself.
-# The compiler repeats this loop anyway, which is probably faster in the long run anyway.
+# The compiler repeats this loop anyway, which is probably faster in the long run.
 template blitLoop(p: untyped, pixel: untyped) =
     for y in 0 .. img.height:
         if y >= var_info.yres.int:
@@ -89,6 +94,11 @@ proc blitImage*(img: Image) =
 
     if mapPtr == nil:
         initFb()
+
+    # If initializing the framebuffer still didn't result in a map pointer,
+    # abort.
+    if mapPtr == nil:
+        return
 
     case var_info.bits_per_pixel
     of 16:

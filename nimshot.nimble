@@ -30,7 +30,6 @@ task muslRelease, "Produce a static release build through musl toolchain.":
     gccExe = "toolchain/armv7l-linux-musleabihf-cross/bin/armv7l-linux-musleabihf-gcc"
     compile = join([
         "c",
-        "-d:useFB",
         "-d:NimblePkgVersion=" & version,
         "-d:release",
         "-d:strip",
@@ -59,7 +58,6 @@ task dockerRelease, "Build a release through the docker toolchain.":
     nimbleCmd = join([
       "nimble build",
       "-y",
-      "-d:useFB",
       "-d:NimblePkgVersion=" & version,
       "-d:release",
       "-d:strip",

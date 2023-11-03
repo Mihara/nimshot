@@ -3,29 +3,26 @@ import std/[os, parsecfg, strtabs, strutils, parseopt]
 import pixie
 
 const NimblePkgVersion {.strdefine.}: string = "0.0.0"
-const useFB {.booldefine.}: bool = false
 
 import fbpaste
 
-when useFB:
+var font: Font
+var fontStroke: Font
 
-    var font: Font
-    var fontStroke: Font
+const fontSize = 22
+ # This was arrived at experimentally, and pixie is making it difficult
+ # to calculate the actual line height in advance.
+const fontLineHeight = fontSize + 10
+const fontColor = "#fc8c14"
+const fontOutline = black
+const textBg = black
+const outlineSize = 1.0
 
-    const fontSize = 22
-    # This was arrived at experimentally, and pixie is making it difficult 
-    # to calculate the actual line height in advance.
-    const fontLineHeight = fontSize + 10
-    const fontColor = "#fc8c14"
-    const fontOutline = black
-    const textBg = black
-    const outlineSize = 1.0
+const txtMarginX = 16
+const txtMarginY = 16
 
-    const txtMarginX = 16
-    const txtMarginY = 16
-
-    const maxLines = toInt(trunc((targetHeight - txtMarginY*2) / fontLineHeight))
-    var screenBuffer: seq[string]
+const maxLines = toInt(trunc((targetHeight - txtMarginY*2) / fontLineHeight))
+var screenBuffer: seq[string]
 
 type
     Location = enum
@@ -44,43 +41,44 @@ func fitInto(srcWidth, srcHeight, maxWidth, maxHeight: float): tuple[
 
 proc print(s: string) =
     echo s
-    when useFB:
-        screenBuffer.add(s)
+    screenBuffer.add(s)
 
 proc drawText(img: Image, s: string) =
-    when useFB:
+    # Why does drawing text with an outline have to be so complicated.
+    const boundingBox = vec2(targetWidth - txtMarginX*2,
+            targetHeight-txtMarginY*2)
+    const textStart = translate(vec2(txtMarginX, txtMarginY))
 
-        # Why does drawing text with an outline have to be so complicated.
-        const boundingBox = vec2(targetWidth - txtMarginX*2,
-                targetHeight-txtMarginY*2)
-        const textStart = translate(vec2(txtMarginX, txtMarginY))
+    let txt = font.typeset(s, boundingBox, wrap = false)
+    let strk = fontStroke.typeset(s, boundingBox, wrap = false)
+    img.strokeText(strk, textStart, outlineSize)
+    img.fillText(txt, textStart)
 
-        let txt = font.typeset(s, boundingBox, wrap = false)
-        let strk = fontStroke.typeset(s, boundingBox, wrap = false)
-        img.strokeText(strk, textStart, outlineSize)
-        img.fillText(txt, textStart)
+proc rumble(state: bool) =
+    try:
+        writeFile("/sys/class/power_supply/battery/moto",
+                if state: "80" else: "0")
+    except IOError:
+        discard
 
-    discard
 
 proc showConsole(pause: bool = true, clear: bool = false,
         rumble: bool = false) =
-    when useFB:
-        let textBuffer = newImage(targetWidth, targetHeight)
-        textBuffer.fill(textBg)
-        let start = max(0, screenBuffer.len - maxLines)
-        textBuffer.drawText(join(screenBuffer[start .. min(screenBuffer.len-1,
-                start+maxLines-1)], "\n"))
-        blitImage(textBuffer)
-        const rumbleLength = 100
-        if rumble:
-            writeFile("/sys/class/power_supply/battery/moto", "80")
-            sleep(rumbleLength)
-            writeFile("/sys/class/power_supply/battery/moto", "0")
-        if pause:
-            sleep(if rumble: 2000-rumbleLength else: 2000)
-        if clear:
-            screenBuffer = @[]
-    discard
+    let textBuffer = newImage(targetWidth, targetHeight)
+    textBuffer.fill(textBg)
+    let start = max(0, screenBuffer.len - maxLines)
+    textBuffer.drawText(join(screenBuffer[start .. min(screenBuffer.len-1,
+            start+maxLines-1)], "\n"))
+    blitImage(textBuffer)
+    const rumbleLength = 100
+    if rumble:
+        rumble(true)
+        sleep(rumbleLength)
+        rumble(false)
+    if pause:
+        sleep(if rumble: 2000-rumbleLength else: 2000)
+    if clear:
+        screenBuffer = @[]
 
 proc forceAspect(img: Image, x: int, y: int): Image =
     result = img.resize(toInt((targetHeight/y)*x.float), targetHeight)
@@ -160,12 +158,11 @@ proc processImage(fromData: string, maskImage: Image,
 
     result = canvas.encodeImage(FileFormat.PngFormat)
 
-    when useFB:
-        # Now that we have encoded the image into PNG that will be saved,
-        # we can safely draw further on it, so draw the rom name
-        # before blitting.
-        canvas.drawText(romName)
-        blitImage(canvas)
+    # Now that we have encoded the image into PNG that will be saved,
+    # we can safely draw further on it, so draw the rom name
+    # before blitting.
+    canvas.drawText(romName)
+    blitImage(canvas)
 
 
 when isMainModule:
@@ -220,14 +217,12 @@ when isMainModule:
             else: Location.Right
         maskFile = cfg.getSectionValue("image", "mask", "")
 
-    when useFB:
-
-        font = readFont(cfg.getSectionValue("image", "font",
-            "/mnt/mmc/CFW/font/Oswald-Regular.otf"))
-        font.size = fontSize
-        font.paint = fontColor
-        fontStroke = font.copy()
-        fontStroke.paint = fontOutline
+    font = readFont(cfg.getSectionValue("image", "font",
+        "/mnt/mmc/CFW/font/Oswald-Regular.otf"))
+    font.size = fontSize
+    font.paint = fontColor
+    fontStroke = font.copy()
+    fontStroke.paint = fontOutline
 
     let maskImage = if len(maskFile) > 0: decodeImage(readFile(
             maskFile)) else: nil
