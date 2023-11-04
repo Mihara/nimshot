@@ -112,6 +112,10 @@ proc processImage(fromData: string, maskImage: Image,
         # SNES has an unusual aspect ratio (8:7) but few resolutions where pixels are not square.
         (w: 512, h: 224), (w: 256, h: 224), (w: 512, h: 239), (w: 256, h: 239),
                 (w: 256, h: 448),
+        # So does NES. Normally, it needs no special handling,
+        # but the S-Video and such filters are implemented by doubling virtual X
+        # resolution.
+        (w: 602, h:224),
         ]:
         sourceImage = sourceImage.forceAspect(8, 7)
     elif r in [
