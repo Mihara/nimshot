@@ -10,8 +10,8 @@ var font: Font
 var fontStroke: Font
 
 const fontSize = 22
- # This was arrived at experimentally, and pixie is making it difficult
- # to calculate the actual line height in advance.
+    # This was arrived at experimentally, and pixie is making it difficult
+    # to calculate the actual line height in advance.
 const fontLineHeight = fontSize + 10
 const fontColor = "#fc8c14"
 const fontOutline = black
@@ -115,7 +115,7 @@ proc processImage(fromData: string, maskImage: Image,
         # So does NES. Normally, it needs no special handling,
         # but the S-Video and such filters are implemented by doubling virtual X
         # resolution.
-        (w: 602, h:224),
+        (w: 602, h: 224),
         ]:
         sourceImage = sourceImage.forceAspect(8, 7)
     elif r in [
@@ -273,32 +273,38 @@ when isMainModule:
                     continue
 
                 # Strscans is really less reliable than it should be.
-                let chunks = rsplit(filename, '-', 2, )
 
-                if len(chunks) == 3 and len(chunks[1]) == 6 and len(chunks[
-                        2]) == 6:
+                var romName = ""
 
-                    let romName = chunks[0]
+                # RetroArch naming pattern.
+                if (let dateChunks = rsplit(filename, '-', 2, ); len(
+                        dateChunks) == 3 and len(dateChunks[1]) == 6 and len(
+                        dateChunks[2]) == 6):
+                    romName = dateChunks[0]
+                # Screenshot Daemon naming pattern.
+                elif (let numberChunks = rsplit(filename, '_', 1); len(
+                        numberChunks) == 2 and len(numberChunks[1]) == 3):
+                    romName = numberChunks[0]
 
-                    if romNames.hasKey(romName):
+                if romName != "" and romNames.hasKey(romName):
 
-                        print "+ " & filename & ext
+                    print "+ " & filename & ext
 
-                        if dryRun:
-                            continue
+                    if dryRun:
+                        continue
 
-                        # Make sure the target images directory exists.
-                        createDir(romNames[romName])
-                        # Process our screenshot and save it.
-                        writeFile(romNames[romName] / romName & ".png",
-                                processImage(readFile(shotPath), maskImage,
-                                        position, romName))
-                        removeFile(shotPath)
+                    # Make sure the target images directory exists.
+                    createDir(romNames[romName])
+                    # Process our screenshot and save it.
+                    writeFile(romNames[romName] / romName & ".png",
+                            processImage(readFile(shotPath), maskImage,
+                                    position, romName))
+                    removeFile(shotPath)
+                else:
+                    if romName in ambiguousNames:
+                        print "? " & filename
                     else:
-                        if romName in ambiguousNames:
-                            print "? " & filename
-                        else:
-                            print "- " & filename
+                        print "- " & filename
 
     of Clean:
         # Now we need to go through the Imgs directories and identify files that
