@@ -119,7 +119,7 @@ proc processImage(fromData: string, maskImage: Image,
         ]:
         sourceImage = sourceImage.forceAspect(8, 7)
     elif r in [
-        (w: 720, h: 270), # Amiga
+        (w: 720, h: 270), (w: 720, h: 240), # Amiga
         (w: 160, h: 210), # Atari 2600
         # PSX is rapidly emerging as the craziest platform, which will eventually
         # result in a false positive somewhere.
